@@ -1,0 +1,19 @@
+{
+  "name": "Nagar Mitra",
+  "short_name": "Nagar Mitra",
+  "description": "Smart City Solutions Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/next.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["utilities", "productivity"],
+  "prefer_related_applications": false
+}
