@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Home, Briefcase, Calendar, Shield, Settings } from 'lucide-react';
+import { Home, Users, ScanLine, History, Settings } from 'lucide-react';
 
 type IconComponentType = React.ElementType<{ className?: string }>;
 export interface InteractiveMenuItem {
@@ -18,9 +18,9 @@ export interface InteractiveMenuProps {
 
 const defaultItems: InteractiveMenuItem[] = [
     { label: 'home', icon: Home, href: '/' },
-    { label: 'services', icon: Briefcase, href: '/services' },
-    { label: 'events', icon: Calendar, href: '/events' },
-    { label: 'safety', icon: Shield, href: '/safety' },
+    { label: 'community', icon: Users, href: '/community' },
+    { label: 'raise issue', icon: ScanLine, href: '/raise-issue' },
+    { label: 'history', icon: History, href: '/history' },
     { label: 'settings', icon: Settings, href: '/settings' },
 ];
 
@@ -50,27 +50,7 @@ const InteractiveMenu: React.FC<InteractiveMenuProps> = ({ items, accentColor })
       }
   }, [finalItems, activeIndex]);
 
-  const textRefs = useRef<(HTMLElement | null)[]>([]);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
-
-  useEffect(() => {
-    const setLineWidth = () => {
-      const activeItemElement = itemRefs.current[activeIndex];
-      const activeTextElement = textRefs.current[activeIndex];
-
-      if (activeItemElement && activeTextElement) {
-        const textWidth = activeTextElement.offsetWidth;
-        activeItemElement.style.setProperty('--lineWidth', `${textWidth}px`);
-      }
-    };
-
-    setLineWidth();
-
-    window.addEventListener('resize', setLineWidth);
-    return () => {
-      window.removeEventListener('resize', setLineWidth);
-    };
-  }, [activeIndex, finalItems]);
 
   const handleItemClick = (index: number) => {
     setActiveIndex(index);
@@ -114,16 +94,12 @@ const InteractiveMenu: React.FC<InteractiveMenuProps> = ({ items, accentColor })
             ref={(el) => {
               itemRefs.current[index] = el;
             }}
-            style={{ '--lineWidth': '0px' } as React.CSSProperties} 
           >
             <div className="menu__icon">
               <IconComponent className="icon" />
             </div>
             <strong
               className={`menu__text ${isTextActive ? 'active' : ''}`}
-              ref={(el) => {
-                textRefs.current[index] = el;
-              }}
             >
               {item.label}
             </strong>

@@ -55,20 +55,11 @@
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
   @keyframes iconBounce {
-  0%, 100% {
-    transform: translateY(0);
+    0%, 100% {
+      transform: scale(1.1);
     }
-  20% {
-    transform: translateY(-0.3em);
-    }
-  40% {
-    transform: translateY(0);
-    }
-  60% {
-    transform: translateY(-0.1em);
-    }
-  80% {
-    transform: translateY(0);
+    50% {
+      transform: scale(1.2);
     }
   }
 }
@@ -129,24 +120,24 @@
 }
 
 .dark {
-  --background: oklch(0 0 0);
-  --foreground: oklch(0.9328 0.0025 228.7857);
-  --card: oklch(0.2097 0.0080 274.5332);
-  --card-foreground: oklch(0.8853 0 0);
-  --popover: oklch(0 0 0);
-  --popover-foreground: oklch(0.9328 0.0025 228.7857);
-  --primary: oklch(0.6692 0.1607 245.0110);
-  --primary-foreground: oklch(1.0000 0 0);
-  --secondary: oklch(0.9622 0.0035 219.5331);
-  --secondary-foreground: oklch(0.1884 0.0128 248.5103);
-  --muted: oklch(0.2090 0 0);
-  --muted-foreground: oklch(0.5637 0.0078 247.9662);
-  --accent: oklch(0.1928 0.0331 242.5459);
-  --accent-foreground: oklch(0.6692 0.1607 245.0110);
-  --destructive: oklch(0.6188 0.2376 25.7658);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.2674 0.0047 248.0045);
-  --input: oklch(0.3020 0.0288 244.8244);
+  --background: oklch(0.0784 0.0039 264.5397);
+  --foreground: oklch(0.9608 0.0118 264.5397);
+  --card: oklch(0.1176 0.0118 264.5397);
+  --card-foreground: oklch(0.9608 0.0118 264.5397);
+  --popover: oklch(0.0980 0.0078 264.5397);
+  --popover-foreground: oklch(0.9608 0.0118 264.5397);
+  --primary: oklch(0.7059 0.1647 248.3922);
+  --primary-foreground: oklch(0.0784 0.0039 264.5397);
+  --secondary: oklch(0.1569 0.0157 264.5397);
+  --secondary-foreground: oklch(0.9608 0.0118 264.5397);
+  --muted: oklch(0.1373 0.0118 264.5397);
+  --muted-foreground: oklch(0.6471 0.0235 264.5397);
+  --accent: oklch(0.1765 0.0196 264.5397);
+  --accent-foreground: oklch(0.9608 0.0118 264.5397);
+  --destructive: oklch(0.6275 0.2157 25.3310);
+  --destructive-foreground: oklch(0.9608 0.0118 264.5397);
+  --border: oklch(0.1765 0.0196 264.5397);
+  --input: oklch(0.1765 0.0196 264.5397);
   --ring: oklch(0.6818 0.1584 243.3540);
   --chart-1: oklch(0.6723 0.1606 244.9955);
   --chart-2: oklch(0.6907 0.1554 160.3454);
@@ -183,10 +174,31 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+        @apply border-border outline-ring/50;
+
   }
+  
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
   body {
-    @apply bg-background text-foreground;
+        @apply bg-background text-foreground;
+
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Smooth transitions for theme changes */
+  * {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
+  }
+  
+  /* Disable transitions for elements that shouldn't animate */
+  .no-transition,
+  .no-transition * {
+    transition: none !important;
   }
 }
 
@@ -220,25 +232,22 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  background: var(--component-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid var(--component-shadow);
-  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
-  padding: 8px 16px calc(env(safe-area-inset-bottom) + 8px) 16px;
+  background: transparent;
+  padding: 0;
 }
 
-/* Modern Mobile Menu Styles */
+/* Modern Mobile Menu Styles - Footer-Style Black Dock */
 .menu {
   display: flex;
   justify-content: space-around;
   align-items: center;
   width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 8px 12px;
-  background: transparent;
-  border-radius: 20px;
+  margin: 0;
+  padding: 20px 16px calc(env(safe-area-inset-bottom) + 20px) 16px;
+  background: #1a1a1a;
+  border: none;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .menu__item {
@@ -248,44 +257,50 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 8px 12px;
-  background: none;
+  padding: 12px 8px;
+  background: transparent;
   border: none;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: var(--component-inactive-color);
+  color: #9ca3af;
   border-radius: 12px;
   min-width: 60px;
-  min-height: 60px;
+  min-height: 64px;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  flex: 1;
 }
 
 .menu__item:hover {
-  background: var(--component-active-bg);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .menu__item:active {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(-1px) scale(0.98);
 }
 
 .menu__item.active {
-  color: var(--component-active-color);
-  background: var(--component-active-bg);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
 }
 
+/* Active item indicator dot */
 .menu__item.active::after {
   content: '';
   position: absolute;
-  bottom: -2px;
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
-  width: var(--lineWidth, 20px);
-  height: 2px;
-  background: var(--component-active-color);
-  border-radius: 1px;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 4px;
+  height: 4px;
+  background: #ffffff;
+  border-radius: 50%;
+  opacity: 0.9;
 }
 
 .menu__icon {
@@ -296,11 +311,12 @@
 }
 
 .menu__item:hover .menu__icon {
-  transform: translateY(-1px);
+  transform: scale(1.1);
 }
 
 .menu__item.active .menu__icon {
-  animation: iconBounce 0.6s ease-in-out;
+  transform: scale(1.1);
+  animation: iconBounce 0.5s ease-in-out;
 }
 
 .menu__icon .icon {
@@ -314,8 +330,14 @@
   font-weight: 500;
   letter-spacing: 0.01em;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0.8;
+  opacity: 1;
   text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.menu__text.active {
+  opacity: 1;
+  font-weight: 700;
 }
 
 .menu__text.active {
@@ -323,16 +345,23 @@
   font-weight: 600;
 }
 
+/* Animation keyframes */
+@keyframes iconBounce {
+  0% { transform: scale(1.1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1.1); }
+}
+
 /* Mobile viewport optimizations */
 @media screen and (max-width: 480px) {
   .menu {
-    padding: 6px 8px;
+    padding: 18px 12px calc(env(safe-area-inset-bottom) + 18px) 12px;
   }
   
   .menu__item {
     min-width: 50px;
-    min-height: 50px;
-    padding: 6px 8px;
+    min-height: 56px;
+    padding: 10px 6px;
     gap: 3px;
   }
   
@@ -344,40 +373,189 @@
   .menu__text {
     font-size: 10px;
   }
-  
-  .mobile-menu-container {
-    padding: 6px 12px calc(env(safe-area-inset-bottom) + 6px) 12px;
+}
+
+/* Light mode support - Menu stays black */
+@media (prefers-color-scheme: light) {
+  .menu {
+    background: #1a1a1a;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25);
   }
 }
 
-/* Dark mode support */
+/* Dark mode support - Media query */
 @media (prefers-color-scheme: dark) {
-  .mobile-menu-container {
-    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.3);
+  .menu {
+    background: #1a1a1a;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
   }
+}
+
+/* Explicit dark class support for menu */
+.dark .menu {
+  background: #1a1a1a;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .menu__item,
   .menu__icon,
-  .menu__text,
-  .menu__item.active::after {
+  .menu__text {
     transition: none;
   }
   
   .menu__item.active .menu__icon {
     animation: none;
+    transform: none;
+  }
+  
+  .menu__item:hover .menu__icon {
+    transform: none;
   }
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
+  .menu {
+    background: var(--card);
+    border: 2px solid var(--border);
+    backdrop-filter: none;
+  }
+  
   .menu__item {
-    border: 1px solid var(--component-shadow);
+    color: var(--foreground);
   }
   
   .menu__item.active {
-    border-color: var(--component-active-color);
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+}
+
+/* Theme Toggle Styles */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.theme-toggle:active {
+  transform: translateY(0);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.theme-toggle__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle__icon .icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.theme-toggle:hover .theme-toggle__icon {
+  transform: rotate(15deg);
+}
+
+.theme-toggle__label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.theme-toggle--compact {
+  padding: 8px;
+  gap: 0;
+  min-width: 40px;
+  border-radius: 10px;
+}
+
+.theme-toggle--compact .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.theme-toggle--loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.theme-toggle--loading:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Dark mode theme toggle adjustments */
+@media (prefers-color-scheme: dark) {
+  .theme-toggle {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .theme-toggle:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .theme-toggle:active {
+    background: rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Dark class support for theme toggle */
+.dark .theme-toggle {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .theme-toggle:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark .theme-toggle:active {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Light mode theme toggle adjustments */
+@media (prefers-color-scheme: light) {
+  .theme-toggle {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: var(--foreground);
+  }
+  
+  .theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+  
+  .theme-toggle:active {
+    background: rgba(255, 255, 255, 1);
   }
 }

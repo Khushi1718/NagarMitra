@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { InteractiveMenu } from "@/components/ui/modern-mobile-menu";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -40,18 +41,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased mobile-optimized`}
       >
-        <div className="app-container">
-          <main className="main-content">
-            {children}
-          </main>
-          <div className="mobile-menu-container">
-            <InteractiveMenu />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange={false}
+        >
+          <div className="app-container">
+            <main className="main-content">
+              {children}
+            </main>
+            <div className="mobile-menu-container">
+              <InteractiveMenu />
+            </div>
           </div>
-        </div>
+        </ThemeProvider>
       </body>
     </html>
   );
