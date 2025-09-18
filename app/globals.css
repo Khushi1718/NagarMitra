@@ -559,3 +559,134 @@
     background: rgba(255, 255, 255, 1);
   }
 }
+
+/* Google Translate Widget Styles */
+/* Force hide Google Translate banner and toolbar */
+.goog-te-banner-frame,
+.goog-te-ftab-frame {
+  display: none !important;
+}
+
+/* Hide Google Translate elements that can interfere with layout */
+.goog-te-menu-frame {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+}
+
+.goog-te-menu-value {
+  padding: 3px !important;
+}
+
+.goog-te-gadget-simple {
+  background-color: transparent !important;
+  border: none !important;
+  font-size: 10pt !important;
+  display: inline-block;
+  padding: 1px !important;
+  cursor: pointer;
+}
+
+.goog-te-combo {
+  margin: 2px 0 !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 4px !important;
+  padding: 2px 4px !important;
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  font-size: 12px !important;
+  min-width: 120px !important;
+}
+
+.goog-te-combo:focus {
+  outline: 2px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Hide Google Translate branding and links */
+.goog-logo-link {
+  display: none !important;
+}
+
+.goog-te-gadget {
+  color: transparent !important;
+}
+
+.goog-te-gadget > span > a {
+  display: none !important;
+}
+
+.goog-te-gadget .goog-te-combo {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Prevent Google Translate from pushing content down */
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+/* Hide Google Translate tooltips and spinners */
+#goog-gt-tt,
+.goog-te-spinner-pos,
+.goog-te-spinner-animation {
+  display: none !important;
+}
+
+/* Remove Google Translate text highlighting */
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* Style translated text to maintain readability */
+font[style*="color: rgb(68, 68, 68)"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Hide skip translate iframe */
+.skiptranslate iframe {
+  visibility: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+}
+
+/* Dark mode adjustments for Google Translate */
+.dark .goog-te-combo {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .goog-te-menu-frame {
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .goog-te-menu2-item div {
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+.dark .goog-te-menu2-item:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+/* Ensure body positioning is maintained */
+html body {
+  position: static !important;
+  top: auto !important;
+}
+
+/* Additional responsive fixes */
+@media (max-width: 768px) {
+  .goog-te-combo {
+    font-size: 11px !important;
+    min-width: 100px !important;
+  }
+}
+
+/* Loading animation for translation */
+@keyframes translateSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

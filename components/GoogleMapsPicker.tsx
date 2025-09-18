@@ -62,10 +62,9 @@ export default function GoogleMapsPicker({
   onClose
 }: GoogleMapsPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markerInstanceRef = useRef<any>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markerInstanceRef = useRef<google.maps.Marker | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
 
   useEffect(() => {
@@ -120,7 +119,7 @@ export default function GoogleMapsPicker({
         });
 
         // Handle map click
-        mapInstance.addListener('click', (event: any) => {
+        mapInstance.addListener('click', (event: google.maps.MapMouseEvent) => {
           if (event.latLng) {
             const newLocation = {
               lat: event.latLng.lat(),
@@ -133,7 +132,6 @@ export default function GoogleMapsPicker({
 
         mapInstanceRef.current = mapInstance;
         markerInstanceRef.current = markerInstance;
-        setIsMapLoaded(true);
       } catch (error) {
         console.error('Error initializing map:', error);
         setMapError(true);
@@ -176,7 +174,7 @@ export default function GoogleMapsPicker({
         const geocoder = new window.google.maps.Geocoder();
         geocoder.geocode(
           { location: selectedLocation },
-          (results: any, status: any) => {
+          (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
             if (status === 'OK' && results && results[0]) {
               onLocationSelect({
                 address: results[0].formatted_address,
@@ -199,7 +197,7 @@ export default function GoogleMapsPicker({
         });
         onClose();
       }
-    } catch (error) {
+    } catch {
       // Fallback to coordinates
       onLocationSelect({
         address: `Lat: ${selectedLocation.lat.toFixed(6)}, Lng: ${selectedLocation.lng.toFixed(6)}`,

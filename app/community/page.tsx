@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, MapPin, Clock, User } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MapPin, Clock } from 'lucide-react';
 
 interface CommunityPost {
   id: number;

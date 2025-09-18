@@ -17,22 +17,23 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Nagar Mitra",
   description: "Smart City Solutions Platform",
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' }
-  ],
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'Nagar Mitra'
   },
   manifest: '/manifest.json'
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' }
+  ]
 };
 
 export default function RootLayout({

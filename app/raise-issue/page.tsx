@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { Camera, MapPin, Upload, X, Check, AlertTriangle } from 'lucide-react';
+import Image from 'next/image';
 import GoogleMapsPicker from '../../components/GoogleMapsPicker';
 
 interface IssueFormData {
@@ -224,7 +225,7 @@ export default function RaiseIssue() {
       });
       setCapturedImages([]);
       setCurrentStep(1);
-    } catch (error) {
+    } catch {
       alert('Error submitting report. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -313,7 +314,7 @@ export default function RaiseIssue() {
                   <button
                     key={priority.value}
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, priority: priority.value as any }))}
+                    onClick={() => setFormData(prev => ({ ...prev, priority: priority.value as 'low' | 'medium' | 'high' }))}
                     className={`px-4 py-2 rounded-md text-sm font-medium ${
                       formData.priority === priority.value
                         ? priority.color
@@ -463,9 +464,11 @@ export default function RaiseIssue() {
                 <div className="grid grid-cols-3 gap-2">
                   {capturedImages.map((image, index) => (
                     <div key={index} className="relative">
-                      <img
+                      <Image
                         src={image}
                         alt={`Captured ${index}`}
+                        width={80}
+                        height={80}
                         className="w-full h-20 object-cover rounded-md"
                       />
                       <button

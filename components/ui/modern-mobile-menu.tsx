@@ -31,9 +31,13 @@ const InteractiveMenu: React.FC<InteractiveMenuProps> = ({ items, accentColor })
   const pathname = usePathname();
 
   const finalItems = useMemo(() => {
-     const isValid = items && Array.isArray(items) && items.length >= 2 && items.length <= 5;
+     if (!items) {
+        // No items provided, use defaults silently
+        return defaultItems;
+     }
+     const isValid = Array.isArray(items) && items.length >= 2 && items.length <= 5;
      if (!isValid) {
-        console.warn("InteractiveMenu: 'items' prop is invalid or missing. Using default items.", items);
+        console.warn("InteractiveMenu: 'items' prop is invalid. Using default items.", items);
         return defaultItems;
      }
      return items;

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { LanguageSelector, type Language } from '@/components/LanguageSelectorNew';
+import { TranslationTestComponent } from '@/components/TranslationTestComponent';
 
 export default function Settings() {
   const [profileData, setProfileData] = useState({
@@ -134,6 +136,9 @@ export default function Settings() {
                 <span className="text-sm">Theme</span>
                 <ThemeToggle />
               </div>
+              <LanguageSelector onLanguageChange={(language: Language) => {
+                console.log('Language changed to:', language);
+              }} />
             </div>
           </div>
 
@@ -166,6 +171,9 @@ export default function Settings() {
           </button>
 
         </div>
+
+        {/* Translation Test Component */}
+        <TranslationTestComponent />
       </div>
     </div>
   );
