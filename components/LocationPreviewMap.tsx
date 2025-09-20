@@ -18,7 +18,6 @@ export default function LocationPreviewMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerInstanceRef = useRef<google.maps.Marker | null>(null);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +25,6 @@ export default function LocationPreviewMap({
 
     // Reset loading state when coordinates change
     setIsLoading(true);
-    setIsMapLoaded(false);
 
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey || apiKey === 'demo_key_replace_with_actual_key') {
@@ -82,7 +80,6 @@ export default function LocationPreviewMap({
         // Store references
         mapInstanceRef.current = mapInstance;
         markerInstanceRef.current = markerInstance;
-        setIsMapLoaded(true);
 
         // Add info window if address is provided
         if (address) {

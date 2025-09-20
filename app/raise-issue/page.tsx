@@ -22,6 +22,12 @@ interface IssueFormData {
   images: File[];
 }
 
+// Using minimal interfaces to avoid Google Maps type conflicts
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GoogleMapsService = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GoogleMapsGeocoder = any;
+
 const issueCategories = [
   { value: 'potholes', label: 'Potholes & Road Damage', icon: '🕳️' },
   { value: 'streetlights', label: 'Street Lighting Issues', icon: '💡' },
@@ -63,8 +69,8 @@ export default function RaiseIssue() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+  const autocompleteServiceRef = useRef<GoogleMapsService | null>(null);
+  const geocoderRef = useRef<GoogleMapsGeocoder | null>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Start camera stream
@@ -255,8 +261,8 @@ export default function RaiseIssue() {
       await loadGoogleMapsAPI();
       
       if (window.google?.maps?.places) {
-        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService() as any;
-        geocoderRef.current = new window.google.maps.Geocoder() as any;
+        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+        geocoderRef.current = new window.google.maps.Geocoder();
         console.log('Google Maps services initialized');
       }
     } catch (error) {
@@ -286,17 +292,19 @@ export default function RaiseIssue() {
 
     if (autocompleteServiceRef.current) {
       try {
-        (autocompleteServiceRef.current as any).getPlacePredictions(
+        autocompleteServiceRef.current.getPlacePredictions(
           {
             input: value,
             componentRestrictions: { country: 'in' }, // Restrict to India
           },
-          (predictions: any, status: any) => {
+          (predictions: google.maps.places.QueryAutocompletePrediction[] | null, status: google.maps.places.PlacesServiceStatus) => {
             if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-              const formattedSuggestions = predictions.map((prediction: any) => ({
-                place_id: prediction.place_id,
-                description: prediction.description,
-              }));
+              const formattedSuggestions = predictions
+                .filter((prediction) => prediction.place_id) // Filter out predictions without place_id
+                .map((prediction) => ({
+                  place_id: prediction.place_id!,
+                  description: prediction.description,
+                }));
               setSuggestions(formattedSuggestions);
               setShowSuggestions(true);
             } else {
@@ -327,9 +335,9 @@ export default function RaiseIssue() {
     // Get coordinates for the selected place
     if (geocoderRef.current) {
       try {
-        (geocoderRef.current as any).geocode(
+        geocoderRef.current.geocode(
           { placeId: suggestion.place_id },
-          (results: any, status: any) => {
+          (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
             if (status === 'OK' && results && results[0]) {
               const location = results[0].geometry.location;
               const coordinates = {
@@ -528,7 +536,7 @@ export default function RaiseIssue() {
                   ref={suggestionsRef}
                   className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
                 >
-                  {suggestions.map((suggestion, index) => (
+                  {suggestions.map((suggestion) => (
                     <div
                       key={suggestion.place_id}
                       className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"

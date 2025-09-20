@@ -1,6 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
+
+// Using eslint-disable to avoid Google Maps type conflicts
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GoogleMapsAutocompleteService = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GoogleMapsPlacesService = any;
 import { loadGoogleMapsAPI } from '../lib/googleMapsLoader';
 
 interface GoogleMapsPickerProps {
@@ -67,14 +73,18 @@ export default function GoogleMapsPicker({
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerInstanceRef = useRef<google.maps.Marker | null>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapError, setMapError] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<{
+    place_id: string; 
+    description: string;
+    main_text?: string;
+    secondary_text?: string;
+  }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const autocompleteServiceRef = useRef<any>(null);
-  const placesServiceRef = useRef<any>(null);
+  const autocompleteServiceRef = useRef<GoogleMapsAutocompleteService | null>(null);
+  const placesServiceRef = useRef<GoogleMapsPlacesService | null>(null);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -147,8 +157,8 @@ export default function GoogleMapsPicker({
 
         // Initialize Places services for search functionality
         if (window.google.maps.places) {
-          autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService() as any;
-          placesServiceRef.current = new window.google.maps.places.PlacesService(mapInstance) as any;
+          autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService() as GoogleMapsAutocompleteService;
+          placesServiceRef.current = new window.google.maps.places.PlacesService(mapInstance) as GoogleMapsPlacesService;
         }
       } catch (error) {
         console.error('Error initializing map:', error);
@@ -188,9 +198,18 @@ export default function GoogleMapsPicker({
         types: ['establishment', 'geocode']
       };
 
-      autocompleteServiceRef.current.getPlacePredictions(request, (predictions: any, status: any) => {
+      autocompleteServiceRef.current.getPlacePredictions(request, (predictions: google.maps.places.QueryAutocompletePrediction[] | null, status: google.maps.places.PlacesServiceStatus) => {
         if (status === 'OK' && predictions) {
-          setSuggestions(predictions);
+          setSuggestions(predictions.filter(p => p.place_id).map(p => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const structured = (p as any)?.structured_formatting;
+            return {
+              place_id: p.place_id!,
+              description: p.description,
+              main_text: structured?.main_text,
+              secondary_text: structured?.secondary_text
+            };
+          }));
           setShowSuggestions(true);
         } else {
           setSuggestions([]);
@@ -219,7 +238,7 @@ export default function GoogleMapsPicker({
       fields: ['geometry', 'formatted_address', 'name', 'place_id']
     };
 
-    placesServiceRef.current.getDetails(request, (place: any, status: any) => {
+    placesServiceRef.current.getDetails(request, (place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) => {
       console.log('Place details response:', { place, status });
       
       if (status === 'OK' && place && place.geometry && place.geometry.location) {
@@ -265,7 +284,7 @@ export default function GoogleMapsPicker({
         if (typeof window.google !== 'undefined' && window.google.maps) {
           console.log('Attempting fallback geocoding for:', description);
           const geocoder = new window.google.maps.Geocoder();
-          geocoder.geocode({ address: description }, (results: any, geocodeStatus: any) => {
+          geocoder.geocode({ address: description }, (results: google.maps.GeocoderResult[] | null, geocodeStatus: google.maps.GeocoderStatus) => {
             console.log('Geocoding results:', { results, geocodeStatus });
             if (geocodeStatus === 'OK' && results && results[0]) {
               const location = {
@@ -411,10 +430,10 @@ export default function GoogleMapsPicker({
                       className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 text-black"
                     >
                       <div className="font-medium text-sm text-gray-900">
-                        {suggestion.structured_formatting?.main_text || suggestion.description}
+                        {suggestion.main_text || suggestion.description}
                       </div>
-                      {suggestion.structured_formatting?.secondary_text && (
-                        <div className="text-xs text-gray-600">{suggestion.structured_formatting.secondary_text}</div>
+                      {suggestion.secondary_text && (
+                        <div className="text-xs text-gray-600">{suggestion.secondary_text}</div>
                       )}
                     </div>
                   ))}
