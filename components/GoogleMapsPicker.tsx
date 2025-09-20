@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { loadGoogleMapsAPI } from '../lib/googleMapsLoader';
 
 interface GoogleMapsPickerProps {
   onLocationSelect: (location: { address: string; coordinates: { lat: number; lng: number } }) => void;
@@ -62,10 +63,18 @@ export default function GoogleMapsPicker({
   onClose
 }: GoogleMapsPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerInstanceRef = useRef<google.maps.Marker | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapError, setMapError] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const autocompleteServiceRef = useRef<any>(null);
+  const placesServiceRef = useRef<any>(null);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -73,6 +82,9 @@ export default function GoogleMapsPicker({
     // Reset state when component becomes visible
     setSelectedLocation(defaultLocation);
     setMapError(false);
+    setSearchQuery('');
+    setSuggestions([]);
+    setShowSuggestions(false);
 
     // Check for API key
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -84,7 +96,7 @@ export default function GoogleMapsPicker({
 
     if (!mapRef.current) return;
 
-    // Initialize Google Maps
+    // Initialize Google Maps using centralized loader
     const initMap = () => {
       try {
         if (typeof window.google === 'undefined' || !window.google.maps) {
@@ -132,28 +144,27 @@ export default function GoogleMapsPicker({
 
         mapInstanceRef.current = mapInstance;
         markerInstanceRef.current = markerInstance;
+
+        // Initialize Places services for search functionality
+        if (window.google.maps.places) {
+          autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService() as any;
+          placesServiceRef.current = new window.google.maps.places.PlacesService(mapInstance) as any;
+        }
       } catch (error) {
         console.error('Error initializing map:', error);
         setMapError(true);
       }
     };
 
-    // Check if Google Maps API is already loaded
-    if (typeof window.google !== 'undefined' && window.google.maps) {
-      initMap();
-    } else {
-      // Load Google Maps API
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initMap;
-      script.onerror = () => {
-        console.error('Failed to load Google Maps API');
+    // Load Google Maps API using centralized loader
+    loadGoogleMapsAPI()
+      .then(() => {
+        initMap();
+      })
+      .catch((error) => {
+        console.error('Failed to load Google Maps API:', error);
         setMapError(true);
-      };
-      document.head.appendChild(script);
-    }
+      });
 
     return () => {
       // Cleanup
@@ -165,22 +176,177 @@ export default function GoogleMapsPicker({
     };
   }, [isVisible, defaultLocation]);
 
+  // Handle search input changes
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    
+    if (value.length > 2 && autocompleteServiceRef.current) {
+      const request = {
+        input: value,
+        location: selectedLocation ? new window.google.maps.LatLng(selectedLocation.lat, selectedLocation.lng) : new window.google.maps.LatLng(defaultLocation.lat, defaultLocation.lng),
+        radius: 50000, // 50km radius
+        types: ['establishment', 'geocode']
+      };
+
+      autocompleteServiceRef.current.getPlacePredictions(request, (predictions: any, status: any) => {
+        if (status === 'OK' && predictions) {
+          setSuggestions(predictions);
+          setShowSuggestions(true);
+        } else {
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      });
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = (placeId: string, description: string) => {
+    console.log('handleSuggestionSelect called with:', { placeId, description });
+    
+    if (!placesServiceRef.current) {
+      console.error('Places service not available');
+      return;
+    }
+
+    console.log('Getting place details for:', placeId);
+
+    const request = {
+      placeId: placeId,
+      fields: ['geometry', 'formatted_address', 'name', 'place_id']
+    };
+
+    placesServiceRef.current.getDetails(request, (place: any, status: any) => {
+      console.log('Place details response:', { place, status });
+      
+      if (status === 'OK' && place && place.geometry && place.geometry.location) {
+        const location = {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng()
+        };
+        
+        const address = place.formatted_address || place.name || description;
+        
+        console.log('Setting selected location:', {
+          address: address,
+          coordinates: location,
+          placeId: place.place_id
+        });
+        
+        // Set the selected location first
+        setSelectedLocation(location);
+        
+        // Update search input with the selected place name
+        setSearchQuery(address);
+        setShowSuggestions(false);
+        
+        // Update map and marker
+        if (mapInstanceRef.current && markerInstanceRef.current) {
+          console.log('Updating map and marker');
+          mapInstanceRef.current.setCenter(location);
+          mapInstanceRef.current.setZoom(16);
+          markerInstanceRef.current.setPosition(location);
+        } else {
+          console.warn('Map or marker instance not available');
+        }
+        
+        console.log('Location successfully selected from suggestion');
+        
+      } else {
+        console.error('Place details request failed:', status, place);
+        // Fallback - still set the search query and hide suggestions
+        setSearchQuery(description);
+        setShowSuggestions(false);
+        
+        // Try to use the description as a fallback for geocoding
+        if (typeof window.google !== 'undefined' && window.google.maps) {
+          console.log('Attempting fallback geocoding for:', description);
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ address: description }, (results: any, geocodeStatus: any) => {
+            console.log('Geocoding results:', { results, geocodeStatus });
+            if (geocodeStatus === 'OK' && results && results[0]) {
+              const location = {
+                lat: results[0].geometry.location.lat(),
+                lng: results[0].geometry.location.lng()
+              };
+              console.log('Setting location from geocoding:', location);
+              setSelectedLocation(location);
+              
+              if (mapInstanceRef.current && markerInstanceRef.current) {
+                mapInstanceRef.current.setCenter(location);
+                mapInstanceRef.current.setZoom(16);
+                markerInstanceRef.current.setPosition(location);
+              }
+            }
+          });
+        }
+      }
+    });
+  };
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // Check if the click is outside both the search input and the suggestions dropdown
+      if (searchInputRef.current && 
+          !searchInputRef.current.contains(target) &&
+          suggestionsRef.current &&
+          !suggestionsRef.current.contains(target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleConfirmLocation = async () => {
-    if (!selectedLocation) return;
+    console.log('Confirm location clicked. Current state:', {
+      selectedLocation,
+      searchQuery,
+      mapError
+    });
+    
+    if (!selectedLocation) {
+      console.error('No location selected');
+      alert('Please select a location first');
+      return;
+    }
 
     try {
-      // Try reverse geocoding to get address if Google Maps is available
+      // If we have a search query (from place selection), use it as the address
+      if (searchQuery && searchQuery.trim() && !searchQuery.includes('Lat:')) {
+        console.log('Using search query as address:', searchQuery.trim());
+        onLocationSelect({
+          address: searchQuery.trim(),
+          coordinates: selectedLocation
+        });
+        onClose();
+        return;
+      }
+
+      // Otherwise, try reverse geocoding to get address if Google Maps is available
       if (typeof window.google !== 'undefined' && window.google.maps && !mapError) {
+        console.log('Attempting reverse geocoding for coordinates:', selectedLocation);
         const geocoder = new window.google.maps.Geocoder();
         geocoder.geocode(
           { location: selectedLocation },
           (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
             if (status === 'OK' && results && results[0]) {
+              console.log('Reverse geocoding successful:', results[0].formatted_address);
               onLocationSelect({
                 address: results[0].formatted_address,
                 coordinates: selectedLocation
               });
             } else {
+              console.log('Reverse geocoding failed, using coordinates');
               onLocationSelect({
                 address: `Lat: ${selectedLocation.lat.toFixed(6)}, Lng: ${selectedLocation.lng.toFixed(6)}`,
                 coordinates: selectedLocation
@@ -191,13 +357,15 @@ export default function GoogleMapsPicker({
         );
       } else {
         // Fallback without geocoding
+        console.log('Using coordinates as fallback address');
         onLocationSelect({
           address: `Lat: ${selectedLocation.lat.toFixed(6)}, Lng: ${selectedLocation.lng.toFixed(6)}`,
           coordinates: selectedLocation
         });
         onClose();
       }
-    } catch {
+    } catch (error) {
+      console.error('Error in handleConfirmLocation:', error);
       // Fallback to coordinates
       onLocationSelect({
         address: `Lat: ${selectedLocation.lat.toFixed(6)}, Lng: ${selectedLocation.lng.toFixed(6)}`,
@@ -213,10 +381,61 @@ export default function GoogleMapsPicker({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg w-full max-w-md h-96 flex flex-col">
         <div className="p-4 border-b">
-          <h3 className="font-semibold">Select Issue Location</h3>
+          <h3 className="font-semibold mb-2">Select Issue Location</h3>
+          {!mapError && (
+            <div className="relative mb-2">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search for a location..."
+                className="w-full px-3 py-2 border rounded-md text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div 
+                  ref={suggestionsRef}
+                  className="suggestions-dropdown absolute top-full left-0 right-0 bg-white border border-t-0 rounded-b-md shadow-lg max-h-48 overflow-y-auto z-10"
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={suggestion.place_id || index}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Suggestion clicked:', suggestion.description);
+                        if (suggestion.place_id) {
+                          handleSuggestionSelect(suggestion.place_id, suggestion.description);
+                        }
+                      }}
+                      className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 text-black"
+                    >
+                      <div className="font-medium text-sm text-gray-900">
+                        {suggestion.structured_formatting?.main_text || suggestion.description}
+                      </div>
+                      {suggestion.structured_formatting?.secondary_text && (
+                        <div className="text-xs text-gray-600">{suggestion.structured_formatting.secondary_text}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <p className="text-sm text-gray-600">
-            {mapError ? 'Enter coordinates manually' : 'Tap on the map or drag the marker'}
+            {mapError ? 'Enter coordinates manually' : 
+             selectedLocation ? 'Location selected! Search, tap map, or drag marker to change' : 
+             'Search, tap on the map, or drag the marker'}
           </p>
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-xs text-gray-500 mt-1">
+              Debug: {suggestions.length} suggestions, showSuggestions: {showSuggestions.toString()}
+              {suggestions.length > 0 && (
+                <div>First suggestion: {suggestions[0]?.description || 'No description'}</div>
+              )}
+            </div>
+          )}
         </div>
         
         <div className="flex-1">
@@ -231,19 +450,45 @@ export default function GoogleMapsPicker({
           )}
         </div>
         
+        {/* Selected Location Preview */}
+        {selectedLocation && (
+          <div className="px-4 py-2 bg-blue-50 border-t border-blue-100">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-blue-800">Selected Location:</p>
+                <p className="text-xs text-blue-600 truncate">
+                  {searchQuery && !searchQuery.includes('Lat:') ? 
+                    searchQuery : 
+                    `${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}`
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="p-4 border-t flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirmLocation}
             disabled={!selectedLocation}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium disabled:opacity-50"
+            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              selectedLocation 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
-            Confirm Location
+            {selectedLocation ? (
+              searchQuery && !searchQuery.includes('Lat:') ? 
+              'Confirm Selected Location' : 
+              'Confirm Location'
+            ) : 'Select Location First'}
           </button>
         </div>
       </div>
