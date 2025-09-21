@@ -1,27 +1,25 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ThemeToggleCompact } from '@/components/theme/theme-toggle';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
   const router = useRouter();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-md mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="text-center flex-1">
-            <h1 className="text-3xl font-bold mb-2">Nagar Mitra</h1>
-            <p className="text-muted-foreground">Your Smart City Companion</p>
-          </div>
-          <div className="ml-4">
-            <ThemeToggleCompact />
-          </div>
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">Nagar Mitra</h1>
+          <p className="text-muted-foreground">Your Smart City Companion</p>
         </div>
 
         <div className="space-y-4 mb-8">
           <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl p-6">
-            <h2 className="text-xl font-semibold mb-2">Welcome!</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              Welcome{user ? `, ${user.name.split(' ')[0]}` : ''}!
+            </h2>
             <p className="text-sm opacity-90">
               Report civic issues, connect with your community, and help make your city better.
             </p>

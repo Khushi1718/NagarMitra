@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Camera, MapPin, Upload, X, Check, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import GoogleMapsPicker from '../../components/GoogleMapsPicker';
@@ -42,6 +43,8 @@ const issueCategories = [
 ];
 
 export default function RaiseIssue() {
+  const router = useRouter();
+  
   const [formData, setFormData] = useState<IssueFormData>({
     title: '',
     category: '',
@@ -389,9 +392,15 @@ export default function RaiseIssue() {
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      alert('Issue reported successfully! You will receive updates on the progress.');
+      // Navigate to thank you page with issue details
+      const searchParams = new URLSearchParams({
+        title: formData.title,
+        category: formData.category
+      });
       
-      // Reset form
+      router.push(`/raise-issue/thank-you?${searchParams.toString()}`);
+      
+      // Reset form after navigation
       setFormData({
         title: '',
         category: '',

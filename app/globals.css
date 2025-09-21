@@ -690,3 +690,49 @@ html body {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Onboarding animations */
+@keyframes onboardingFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes onboardingSlideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes onboardingBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.onboarding-container {
+  animation: onboardingFadeIn 0.6s ease-out;
+}
+
+.onboarding-logo {
+  animation: onboardingBounce 2s ease-in-out infinite;
+}
+
+.onboarding-content {
+  animation: onboardingSlideUp 0.6s ease-out 0.2s both;
+}
+
+.onboarding-features {
+  animation: onboardingSlideUp 0.6s ease-out 0.4s both;
+}
+
+.onboarding-button {
+  animation: onboardingSlideUp 0.6s ease-out 0.4s both;
+}
+
+.onboarding-skip {
+  animation: onboardingFadeIn 0.6s ease-out 0.6s both;
+}

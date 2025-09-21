@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { InteractiveMenu } from "@/components/ui/modern-mobile-menu";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { OnboardingProvider } from "@/contexts/OnboardingContext";
+import AuthWrapper from "@/components/AuthWrapper";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -52,14 +54,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
-          <div className="app-container">
-            <main className="main-content">
-              {children}
-            </main>
-            <div className="mobile-menu-container">
-              <InteractiveMenu />
-            </div>
-          </div>
+          <OnboardingProvider>
+            <AuthProvider>
+              <AuthWrapper>
+                {children}
+              </AuthWrapper>
+            </AuthProvider>
+          </OnboardingProvider>
         </ThemeProvider>
       </body>
     </html>
